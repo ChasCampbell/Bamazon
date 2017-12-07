@@ -65,15 +65,27 @@ function start() {
                     else {
                         var priceNow = results[0].price;
                         var stockNow = currentStock - chosenQty;
-                        var query = "UPDATE products  SET stock =? WHERE id =?";
+                        var salesNow;
+                        var orderTotal;
+                        var saleQuery;
+                        var query = "UPDATE products  SET stock = ? WHERE id = ?";
                         connection.query(query, [stockNow, chosenId], function(err, results) {
                             if (err) throw err;
-                            var orderTotal = chosenQty * priceNow;
+                            orderTotal = chosenQty * priceNow;
                             console.log("Thank you for your order. Your order total is $" + orderTotal);
-                            connection.end();
-                            return;
                         }); // End of connection query UPDATE
-                    } //End of else
+                        var totalQuery = "SELECT sales  FROM products WHERE id = ?";
+                        connection.query(totalQuery, [chosenId], function(err, results) {
+                            if (err) throw err;
+                            salesNow = results.sales + orderTotal;
+                        }); // End of connection query SELECT
+                        saleQuery = "UPDATE products  SET sales = ? WHERE id = ?";
+                        connection.query(saleQuery, [salesNow, chosenId], function(err, results) {
+                            if (err) throw err;
+                        }); // End of connection query UPDATE    
+                    } // End of else
+                    connection.end();
+                    return;
                 }); // End of connection query SELECT
             } // End of function lookupItem
             lookupItem();

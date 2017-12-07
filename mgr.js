@@ -48,9 +48,8 @@ function lowInvList() {
 } // End of function lowInvList
 
 function addInv() {
-    var addId;
-    var addStock;
-    var newStock;
+    var addStock
+    var addId
     inquirer.prompt([{
                 name: "idToAddTo",
                 type: "input",
@@ -69,15 +68,21 @@ function addInv() {
             }
         ]) // End of prompt for addInv
         .then(function(answer) {
+            var newStock;
+            console.log(typeof(answer.stock));
             addStock = parseInt(answer.stock);
             addId = answer.idToAddTo;
             connection.query("SELECT id, stock  FROM products", function(err, results) {
                 if (err) throw err;
-                newStock = results[0].stock + addStock;
+                console.log(addStock);
+                console.log(typeof(addStock));
+                console.log(results[0].stock);
+                newStock = 8 //results[0].stock + addStock;
             }); // End of connection query for SELECT
-            connection.query("UPDATE products SET stock = ? WHERE id = ?", { newStock, addId }, function(err, results) {
+            connection.query("UPDATE products SET stock = ? WHERE id = ?", [newStock, addId], function(err, results) {
                 if (err) throw err;
-                console.log("Inventory updated to " + newStock);
+
+                console.log("Inventory of " + addId + " updated to " + newStock);
                 connection.end();
                 return;
             }); // End of connection query for UPDATE
@@ -128,7 +133,7 @@ function addProduct() {
                     var oldProdStock = parseInt(results.stock);
                     newProdStock = oldProdStock + newProdStock;
                 }; // End of connection query
-            connection.query("UPDATE products SET stock = ? WHERE id = ?", { newProdStock, newProdId },
+            connection.query("UPDATE products SET stock = ? WHERE id = ?", [newProdStock, newProdId],
                 function(err, results) {
                     if (err) throw err;
                     connection.end();
@@ -162,3 +167,68 @@ function start() {
 
 } // End of start
 start();
+
+
+
+//SUPERVISOR
+//Building this here because Cloud9 is strange tonight
+var Table = require('cli-table');
+
+// To see a table of sales by department
+function viewSales() {
+    connection.query("SELECT department_id, department_name, over_head_costs, sales SUM(products.sales) AS department.total_sales FROM departments INNER JOIN products ON departments.department_id = products.department_id GROUP BY depatment.department_id",
+        function(err, results) {
+            if (err) throw err;
+            // instantiate a table 
+            var table = new Table({
+                head: ['department_id', 'department_name', "over_head_costs", "product_sales", "total_profit"],
+                colWidths: [100, 200]
+            });
+            for (var i = 0; i < department.department_id.length; i++) {
+                department.total_sales = products.sales - department.over_head_costs;
+                table.push['department.department_id', 'department+name', 'department.over_head_costs', 'product.product.sales', 'department.total_sales']
+            } //End of for
+        }); // End of connection query for SELECT
+    connection.end();
+} // End of viewSales
+
+// to create a new department
+function newDept() {
+    inquirer
+        .prompt({
+            name: "deptName",
+            type: "input",
+            message: "What department would you like to create?",
+        }, {
+            name: "overHead",
+            type: "input",
+            message: "What over head would you assign to this department?",
+        }) // End of prompt
+        .then(function(answer) {
+            connection.query("INSERT INTO departments (department_name, over_head_cost) VALUES (?, ?)", [dept_name, over_head_cost],
+                function(err, results) {
+                    if (err) throw err;
+
+                }); // End of connection.query
+        }); // End of then
+    connection.end();
+} // End of newDept
+
+function supervisor() {
+    inquirer
+        .prompt({
+            name: "viewOrCreate",
+            type: "rawlist",
+            message: "Would you like to view sales by department or create a department?",
+            choices: ["VIEW", "CREATE"]
+        })
+        .then(function(answer) {
+            if (answer.viewOrCreate == "VIEW") {
+                viewSales();
+            }
+            else {
+                newDept();
+            }
+        });
+} // End of function supervisor
+supervisor();

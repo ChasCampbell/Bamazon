@@ -74,3 +74,7 @@ ALTER TABLE products ADD sales DECIMAL(9,2);
 ALTER TABLE departments ADD (
 product_sales INTEGER(6)
 );
+
+ALTER TABLE departments ADD (
+total_profit INTEGER(8)
+);

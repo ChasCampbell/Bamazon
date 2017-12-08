@@ -31,6 +31,7 @@ function getItems() {
 } // End of function getItems
 getItems();
 
+
 // Prompt the user for the id and quantity of the item sought.
 function start() {
     inquirer
@@ -49,18 +50,17 @@ function start() {
                 connection.end();
                 return;
             }
-            var chosenId = parseInt(answer.chosenItem);
-            var chosenQty = parseInt(answer.quantity);
 
             function lookupItem() {
-                var query = "SELECT id, product_name, price, stock  FROM products WHERE id=?";
-                connection.query(query, [chosenId], function(err, results) {
+                var chosenId = parseInt(answer.chosenItem);
+                var chosenQty = parseInt(answer.quantity);
+                var query = "SELECT id, product_name, price, stock  FROM products WHERE ?";
+                connection.query(query, [{ id: chosenId }], function(err, results) {
                     if (err) throw err;
                     var currentStock = results[0].stock;
                     // Check the requested quantity against the number in stock.
                     if (chosenQty > currentStock) {
                         console.log("Sorry, we do not have that many in stock.\brPlease reduce the number requested or make another selection.");
-                        start();
                     } // End of if
                     else {
                         var priceNow = results[0].price;
@@ -68,24 +68,24 @@ function start() {
                         var salesNow;
                         var orderTotal;
                         var saleQuery;
-                        var query = "UPDATE products  SET stock = ? WHERE id = ?";
-                        connection.query(query, [stockNow, chosenId], function(err, results) {
+                        var query = "UPDATE products  SET ? WHERE ?";
+                        connection.query(query, [{ stock: stockNow }, { id: chosenId }], function(err, results) {
                             if (err) throw err;
                             orderTotal = chosenQty * priceNow;
                             console.log("Thank you for your order. Your order total is $" + orderTotal);
+                            var totalQuery = "SELECT sales  FROM products ?";
+                            connection.query(totalQuery, [{ id: chosenId }], function(err, results) {
+                                if (err) throw err;
+                                salesNow = results[0].sales + orderTotal;
+                                saleQuery = "UPDATE products  SET ? WHERE ?";
+                                connection.query(saleQuery, [{ sales: salesNow }, { id: chosenId }], function(err, results) {
+                                    if (err) throw err;
+                                    connection.end();
+                                    return;
+                                }); // End of connection query UPDATE    
+                            }); // End of connection query SELECT
                         }); // End of connection query UPDATE
-                        var totalQuery = "SELECT sales  FROM products WHERE id = ?";
-                        connection.query(totalQuery, [chosenId], function(err, results) {
-                            if (err) throw err;
-                            salesNow = results.sales + orderTotal;
-                        }); // End of connection query SELECT
-                        saleQuery = "UPDATE products  SET sales = ? WHERE id = ?";
-                        connection.query(saleQuery, [salesNow, chosenId], function(err, results) {
-                            if (err) throw err;
-                        }); // End of connection query UPDATE    
                     } // End of else
-                    connection.end();
-                    return;
                 }); // End of connection query SELECT
             } // End of function lookupItem
             lookupItem();

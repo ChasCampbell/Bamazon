@@ -123,8 +123,8 @@ function addProduct() {
             }
         ]) // End of prompt
         .then(function(answer) {
-            var newProdStock = parseInt(answer.initialQuantity);
-            var newProdPrice = parseInt(answer.priceOfNew);
+            var newProdStock = parseInt(answer.initialQuantity, 10);
+            var newProdPrice = parseInt(answer.priceOfNew, 10);
             connection.query("INSERT INTO products (product_name, department, price, stock) VALUES (productToAdd, deptOfNew, ?, ?", [{ price: newProdPrice }, { stock: newProdStock }],
                 function(err, results) {
                     if (err) throw err;

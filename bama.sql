@@ -70,3 +70,7 @@ PRIMARY KEY (department_id)
 );
 
 ALTER TABLE products ADD sales DECIMAL(9,2);
+
+ALTER TABLE departments ADD (
+product_sales INTEGER(6)
+);
